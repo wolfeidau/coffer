@@ -77,14 +77,14 @@ func mustEncryptPayload(data []byte, key []byte) []byte {
 
 	Infof("encoded data len: %d", n)
 
-	return bytes.Join([][]byte{CofferFilePrefix, encoded}, []byte{})
-
+	return bytes.Join([][]byte{CofferFilePrefix, encoded, []byte("\n")}, []byte{})
 }
 
 func mustDecryptPayload(data []byte, key []byte) []byte {
 	if bytes.HasPrefix(data, CofferFilePrefix) {
 
 		payload := bytes.TrimPrefix(data, CofferFilePrefix)
+		payload = bytes.TrimSpace(payload) // remove any trailing whitespace
 		decoded := make([]byte, hex.DecodedLen(len(payload)))
 
 		n, err := hex.Decode(decoded, payload)
