@@ -62,6 +62,15 @@ func MustUpload(cofferFile, secret, bucket string) {
 	mustUpload(bucket, filename, payload)
 }
 
+func MustDownload(cofferFile, secret, bucket string) {
+
+	filename := path.Base(cofferFile)
+
+	payload := mustDownload(bucket, filename)
+
+	mustWriteFile(cofferFile, payload, OwnerRead)
+}
+
 func buildKey(secret string) []byte {
 
 	if len(secret) > CofferBlockSize {

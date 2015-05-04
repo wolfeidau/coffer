@@ -14,12 +14,14 @@ var (
 	secret     = app.Flag("secret", "Coffer secret.").OverrideDefaultFromEnvar("COFFER_SECRET").Required().String()
 
 	// commands
-	encrypt = app.Command("encrypt", "Encrypt the coffer file.")
-	decrypt = app.Command("decrypt", "Decrypt the coffer file.")
-	sync    = app.Command("sync", "Sync the coffer file with the local filesystem.")
-	base    = sync.Flag("base", "Set a base path for testing.").String()
-	upload  = app.Command("upload", "Upload a bundle to s3.")
-	bucket  = upload.Flag("bucket", "s3 URL for the bucket s3://BUCKET1").Required().String()
+	encrypt        = app.Command("encrypt", "Encrypt the coffer file.")
+	decrypt        = app.Command("decrypt", "Decrypt the coffer file.")
+	sync           = app.Command("sync", "Sync the coffer file with the local filesystem.")
+	base           = sync.Flag("base", "Set a base path for testing.").String()
+	upload         = app.Command("upload", "Upload a bundle to s3.")
+	uploadBucket   = upload.Flag("bucket", "Name of the s3 bucket").Required().String()
+	download       = app.Command("download", "Download a bundle from s3.")
+	downloadBucket = download.Flag("bucket", "Name of the s3 bucket").Required().String()
 )
 
 func main() {
@@ -44,6 +46,9 @@ func main() {
 		coffer.MustSync(*cofferFile, *secret, *base)
 	case upload.FullCommand():
 		coffer.Debugf("upload")
-		coffer.MustUpload(*cofferFile, *secret, *bucket)
+		coffer.MustUpload(*cofferFile, *secret, *uploadBucket)
+	case download.FullCommand():
+		coffer.Debugf("download")
+		coffer.MustDownload(*cofferFile, *secret, *downloadBucket)
 	}
 }
