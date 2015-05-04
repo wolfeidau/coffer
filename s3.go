@@ -2,39 +2,47 @@ package coffer
 
 import (
 	"bytes"
-	"io"
-	"net/url"
 
-	s3 "github.com/rlmcpherson/s3gof3r"
+	"github.com/awslabs/aws-sdk-go/aws"
+	"github.com/awslabs/aws-sdk-go/aws/awsutil"
+	"github.com/awslabs/aws-sdk-go/service/s3"
+	"github.com/davecgh/go-spew/spew"
 )
 
 func mustUpload(bucket string, filename string, payload []byte) {
 
-	u, err := url.Parse(bucket)
+	Infof("putting file=%s into bucket=%s length=%d", filename, bucket, len(payload))
+
+	config := aws.DefaultConfig
+	creds, err := config.Credentials.Credentials()
 	if err != nil {
-		Fatalf("Failed to parse bucket URL: %v", err)
+		Fatalf("Unable to load creds: %v", err)
 	}
 
-	k, err := s3.EnvKeys() // get S3 keys from environment
-	if err != nil {
-		Fatalf("Unable to load AWS credentials from environment")
+	svc := s3.New(config)
+
+	params := &s3.PutObjectInput{
+		Bucket:        aws.String(bucket),   // Required
+		Key:           aws.String(filename), // Required
+		Body:          bytes.NewReader(payload),
+		ContentLength: aws.Long(int64(len(payload))),
 	}
 
-	// Open bucket to put file into
-	s3 := s3.New("s3.amazonaws.com", k)
-	b := s3.Bucket(u.Host)
+	resp, err := svc.PutObject(params)
 
-	// Open a PutWriter for upload
-	w, err := b.PutWriter(filename, nil, nil)
-	if err != nil {
-		Fatalf("Put to bucket failed: %v", err)
+	if awserr := aws.Error(err); awserr != nil {
+		// A service error occurred.
+		Fatalf("AWS Error code: %v message: %s", awserr.Code, awserr.Message)
+	} else if err != nil {
+		// A non-service error occurred.
+		Fatalf("Error make request to AWS: %v", err)
 	}
 
-	if _, err = io.Copy(w, bytes.NewBuffer(payload)); err != nil { // Copy into S3
-		Fatalf("Copy content to bucket failed: %v", err)
-	}
+	spew.Dump(resp)
+	spew.Dump(config)
+	spew.Dump(creds)
 
-	if err = w.Close(); err != nil {
-		Fatalf("Closing file failed: %v", err)
-	}
+	// Pretty-print the response data.
+	Infof("response %s", awsutil.StringValue(resp))
+
 }
