@@ -13,7 +13,7 @@ func mustExtractBundle(bundle *Bundle, base string) {
 		for k, f := range bundle.Files {
 			rpath := path.Join(base, k)
 
-			mustMkDirAll(path.Base(rpath))
+			mustMkDirAll(path.Dir(rpath))
 			mustWriteFile(rpath, []byte(f.Content), os.FileMode(f.Mode))
 		}
 	}
@@ -39,8 +39,8 @@ func mustWriteFile(path string, data []byte, mode os.FileMode) []byte {
 }
 
 func mustMkDirAll(rpath string) {
-	Infof("MkDirAll %s", path.Base(rpath))
-	err := os.MkdirAll(path.Base(rpath), 755)
+	Infof("MkDirAll %s", rpath)
+	err := os.MkdirAll(rpath, 0755)
 	if err != nil {
 		Fatalf("failed to create any necessary parents: %v", err)
 	}

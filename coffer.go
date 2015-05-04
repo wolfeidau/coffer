@@ -10,7 +10,7 @@ var (
 	CofferBlockSize  = 32 // AES256
 )
 
-func MustEncrypt(cofferFile string, secret string) {
+func MustEncrypt(cofferFile, secret string) {
 
 	key := buildKey(secret)
 
@@ -18,10 +18,10 @@ func MustEncrypt(cofferFile string, secret string) {
 
 	payload := mustEncryptPayload(data, key)
 
-	mustWriteFile(cofferFile, payload, 600)
+	mustWriteFile(cofferFile, payload, 0600)
 }
 
-func MustDecrypt(cofferFile string, secret string) []byte {
+func MustDecrypt(cofferFile, secret string) []byte {
 
 	key := buildKey(secret)
 
@@ -29,7 +29,24 @@ func MustDecrypt(cofferFile string, secret string) []byte {
 
 	payload := mustDecryptPayload(data, key)
 
-	return mustWriteFile(cofferFile, payload, 600)
+	return mustWriteFile(cofferFile, payload, 0600)
+
+}
+
+func MustSync(cofferFile, secret, base string) {
+
+	var payload []byte
+
+	payload = mustReadFile(cofferFile)
+
+	// if the coffer file is encrypted, decrypt it
+	if isEncrypted(payload) {
+		payload = MustDecrypt(cofferFile, secret)
+	}
+
+	bundle := mustDecodeBundle(payload)
+
+	mustExtractBundle(bundle, base)
 
 }
 
@@ -43,6 +60,10 @@ func buildKey(secret string) []byte {
 	copy(padded, []byte(secret))
 
 	return padded
+}
+
+func isEncrypted(data []byte) bool {
+	return bytes.HasPrefix(data, CofferFilePrefix)
 }
 
 func mustEncryptPayload(data []byte, key []byte) []byte {

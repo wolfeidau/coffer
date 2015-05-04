@@ -16,6 +16,8 @@ var (
 	// commands
 	encrypt = app.Command("encrypt", "Encrypt the coffer file.")
 	decrypt = app.Command("decrypt", "Decrypt the coffer file.")
+	sync    = app.Command("sync", "Sync the coffer file with the local filesystem.")
+	base    = sync.Flag("base", "Set a base path for testing.").String()
 )
 
 func main() {
@@ -34,5 +36,9 @@ func main() {
 	case decrypt.FullCommand():
 		coffer.Debugf("decrypt")
 		coffer.MustDecrypt(*cofferFile, *secret)
+	// sync the file system to the coffer file
+	case sync.FullCommand():
+		coffer.Debugf("sync")
+		coffer.MustSync(*cofferFile, *secret, *base)
 	}
 }
