@@ -19,9 +19,9 @@ var (
 	sync           = app.Command("sync", "Sync the coffer file with the local filesystem.")
 	base           = sync.Flag("base", "Set a base path for testing.").String()
 	upload         = app.Command("upload", "Upload a bundle to s3.")
-	uploadBucket   = upload.Flag("bucket", "Name of the s3 bucket").Required().String()
+	uploadBucket   = upload.Flag("bucket", "Name of the s3 bucket").OverrideDefaultFromEnvar("S3_BUCKET").Required().String()
 	download       = app.Command("download", "Download a bundle from s3.")
-	downloadBucket = download.Flag("bucket", "Name of the s3 bucket").Required().String()
+	downloadBucket = download.Flag("bucket", "Name of the s3 bucket").OverrideDefaultFromEnvar("S3_BUCKET").Required().String()
 )
 
 func main() {

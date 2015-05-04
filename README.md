@@ -11,7 +11,7 @@ The bundle file is a YAML file containing a list of files, there mode and some c
 ```yaml
 files:
   "/home/user/myfile2" :
-    mode: 755
+    mode: 0755
     content: |
       # this is my file
       # with content
@@ -23,6 +23,7 @@ The command reads the following environment variables.
 
 * `AWS_ACCESS_KEY`
 * `AWS_SECRET_KEY`
+* `AWS_REGION`
 * `COFFER_SECRET`
 * `S3_BUCKET`
 
@@ -32,13 +33,13 @@ Sub commands for this tool are:
 
 * encypt
 * decrypt
-* validate
 * upload
+* download
 * sync
 
-# status
+# encryption
 
-I am still building this at the moment.
+This utility currently uses GCM and AES256 see https://github.com/wolfeidau/coffer/blob/master/crypto.go.
 
 # disclaimer
 
