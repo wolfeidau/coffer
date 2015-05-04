@@ -1,15 +1,18 @@
 package coffer
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 )
 
-// need to work out what the issues are with hard coding this, nonce isn't really that
-// helpful in my case I don't believe.
-var nonce = []byte("3c819d9a9bed")
+const nonceLen = 12
 
 func decrypt(ct, key, ad []byte) []byte {
+
+	nonce := ct[:nonceLen]
+	ct = ct[nonceLen:]
 
 	// Create the AES cipher
 	block, err := aes.NewCipher(key)
@@ -32,6 +35,9 @@ func decrypt(ct, key, ad []byte) []byte {
 
 func encrypt(plaintext, key, ad []byte) []byte {
 
+	// must be unique for each encrypt
+	nonce := generateNonce()
+
 	// Create the AES cipher
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -45,5 +51,15 @@ func encrypt(plaintext, key, ad []byte) []byte {
 
 	ct := aesgcm.Seal(nil, nonce, plaintext, ad)
 
-	return ct
+	return bytes.Join([][]byte{nonce, ct}, []byte{})
+}
+
+func generateNonce() []byte {
+
+	b := make([]byte, nonceLen)
+	_, err := rand.Read(b)
+	if err != nil {
+		Fatalf("Failed to generate random nonce: %v", err)
+	}
+	return b
 }
