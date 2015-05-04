@@ -3,40 +3,34 @@ package coffer
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
-	"io"
 )
 
-func decrypt(ciphertext, key []byte) []byte {
+// need to work out what the issues are with hard coding this, nonce isn't really that
+// helpful in my case I don't believe.
+var nonce = []byte("3c819d9a9bed")
+
+func decrypt(ct, key, ad []byte) []byte {
 
 	// Create the AES cipher
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		Fatalf("Cant load cipher: %v", err)
+		Fatalf("Cannot load cipher: %v", err)
 	}
 
-	// Before even testing the decryption,
-	// if the text is too small, then it is incorrect
-	if len(ciphertext) < aes.BlockSize {
-		Fatalf("Text is too short")
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		Fatalf("New GCM failed: %v", err)
 	}
 
-	// Get the 16 byte IV
-	iv := ciphertext[:aes.BlockSize]
+	plaintext, err := aesgcm.Open(nil, nonce, ct, ad)
+	if err != nil {
+		Fatalf("Open payload failed: %v", err)
+	}
 
-	// Remove the IV from the ciphertext
-	ciphertext = ciphertext[aes.BlockSize:]
-
-	// Return a decrypted stream
-	stream := cipher.NewCFBDecrypter(block, iv)
-
-	// Decrypt bytes from ciphertext
-	stream.XORKeyStream(ciphertext, ciphertext)
-
-	return ciphertext
+	return plaintext
 }
 
-func encrypt(plaintext, key []byte) []byte {
+func encrypt(plaintext, key, ad []byte) []byte {
 
 	// Create the AES cipher
 	block, err := aes.NewCipher(key)
@@ -44,23 +38,12 @@ func encrypt(plaintext, key []byte) []byte {
 		Fatalf("Cant load cipher: %v", err)
 	}
 
-	// Empty array of 16 + plaintext length
-	// Include the IV at the beginning
-	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
-
-	// Slice of first 16 bytes
-	iv := ciphertext[:aes.BlockSize]
-
-	// Write 16 rand bytes to fill iv
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		Fatalf("ReadFull failed: %v", err)
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		Fatalf("New GCM failed: %v", err)
 	}
 
-	// Return an encrypted stream
-	stream := cipher.NewCFBEncrypter(block, iv)
+	ct := aesgcm.Seal(nil, nonce, plaintext, ad)
 
-	// Encrypt bytes from plaintext to ciphertext
-	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
-
-	return ciphertext
+	return ct
 }

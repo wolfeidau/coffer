@@ -2,6 +2,9 @@
 
 This command line tool is will retrieve an encrypted bundle of data from an s3 bucket and create files on the local host.
 
+A typical use case for coffer is you have a docker container which needs to retrieve on startup some file based secrets and apply them prior to starting a service. This is quite common requirement with continuous integration agents running in docker containers.
+
+
 
 # bundle format
 
@@ -18,9 +21,7 @@ files:
       # with content
 ```
 
-# overview
-
-The typical use case is you have a docker container which needs to retrieve on startup some file based secrets and apply them prior to starting a service. This is quite common requirement with continuous integration agents running in docker containers.
+# environment
 
 The command reads the following environment variables.
 
