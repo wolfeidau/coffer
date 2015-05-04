@@ -18,6 +18,8 @@ var (
 	decrypt = app.Command("decrypt", "Decrypt the coffer file.")
 	sync    = app.Command("sync", "Sync the coffer file with the local filesystem.")
 	base    = sync.Flag("base", "Set a base path for testing.").String()
+	upload  = app.Command("upload", "Upload a bundle to s3.")
+	bucket  = upload.Flag("bucket", "s3 URL for the bucket s3://BUCKET1").Required().String()
 )
 
 func main() {
@@ -40,5 +42,8 @@ func main() {
 	case sync.FullCommand():
 		coffer.Debugf("sync")
 		coffer.MustSync(*cofferFile, *secret, *base)
+	case upload.FullCommand():
+		coffer.Debugf("upload")
+		coffer.MustUpload(*cofferFile, *secret, *bucket)
 	}
 }

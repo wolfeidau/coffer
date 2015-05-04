@@ -35,6 +35,10 @@ func mustWriteFile(path string, data []byte, mode os.FileMode) []byte {
 	if err != nil {
 		Fatalf("Unable to open file: %v", err)
 	}
+
+	// ensure the mode is set even when we haven't modified the file.
+	os.Chmod(path, mode)
+
 	return data
 }
 

@@ -3,51 +3,63 @@ package coffer
 import (
 	"bytes"
 	"encoding/hex"
+	"os"
+	"path"
 )
 
 var (
 	CofferFilePrefix = []byte(`COFFER:AES256:`)
-	CofferBlockSize  = 32 // AES256
+	CofferBlockSize  = 32                // AES256
+	OwnerRead        = os.FileMode(0600) // os.FileMode, note the octal number
 )
 
 func MustEncrypt(cofferFile, secret string) {
 
-	key := buildKey(secret)
-
 	data := mustReadFile(cofferFile)
 
-	payload := mustEncryptPayload(data, key)
+	payload := mustEncryptPayload(data, secret)
 
-	mustWriteFile(cofferFile, payload, 0600)
+	mustWriteFile(cofferFile, payload, OwnerRead)
 }
 
 func MustDecrypt(cofferFile, secret string) []byte {
 
-	key := buildKey(secret)
-
 	data := mustReadFile(cofferFile)
 
-	payload := mustDecryptPayload(data, key)
+	payload := mustDecryptPayload(data, secret)
 
-	return mustWriteFile(cofferFile, payload, 0600)
+	return mustWriteFile(cofferFile, payload, OwnerRead)
 
 }
 
 func MustSync(cofferFile, secret, base string) {
 
-	var payload []byte
-
-	payload = mustReadFile(cofferFile)
+	payload := mustReadFile(cofferFile)
 
 	// if the coffer file is encrypted, decrypt it
 	if isEncrypted(payload) {
-		payload = MustDecrypt(cofferFile, secret)
+		payload = mustDecryptPayload(payload, secret)
 	}
 
 	bundle := mustDecodeBundle(payload)
 
-	mustExtractBundle(bundle, base)
+	bundle.MustValidate()
 
+	mustExtractBundle(bundle, base)
+}
+
+func MustUpload(cofferFile, secret, bucket string) {
+
+	payload := mustReadFile(cofferFile)
+
+	// if the coffer is not encrypted
+	if !isEncrypted(payload) {
+		payload = mustEncryptPayload(payload, secret)
+	}
+
+	filename := path.Base(cofferFile)
+
+	mustUpload(bucket, filename, payload)
 }
 
 func buildKey(secret string) []byte {
@@ -66,7 +78,9 @@ func isEncrypted(data []byte) bool {
 	return bytes.HasPrefix(data, CofferFilePrefix)
 }
 
-func mustEncryptPayload(data []byte, key []byte) []byte {
+func mustEncryptPayload(data []byte, secret string) []byte {
+
+	key := buildKey(secret)
 
 	if bytes.HasPrefix(data, CofferFilePrefix) {
 		Fatalf("coffer file alread encrypted")
@@ -82,7 +96,10 @@ func mustEncryptPayload(data []byte, key []byte) []byte {
 	return bytes.Join([][]byte{CofferFilePrefix, encoded, []byte("\n")}, []byte{})
 }
 
-func mustDecryptPayload(data []byte, key []byte) []byte {
+func mustDecryptPayload(data []byte, secret string) []byte {
+
+	key := buildKey(secret)
+
 	if bytes.HasPrefix(data, CofferFilePrefix) {
 
 		payload := bytes.TrimPrefix(data, CofferFilePrefix)
