@@ -4,18 +4,14 @@ This command line tool is will retrieve an encrypted bundle of data from an s3 b
 
 A typical use case for coffer is you have a docker container which needs to retrieve on startup some file based secrets and apply them prior to starting a service. This is quite common requirement with continuous integration agents running in docker containers.
 
-
-
 # bundle format
 
-The bundle file is a YAML file containing a list of files, there mode, owner and optionally some content. 
+The bundle file is a YAML file containing a list of files, there mode and some content. At the moment all files are created with the normal default of the running user.
 
 ```yaml
 files:
   "/home/user/myfile2" :
-    mode: "000755"
-    owner: root
-    group: root
+    mode: 755
     content: |
       # this is my file
       # with content
@@ -38,11 +34,19 @@ Sub commands for this tool are:
 * decrypt
 * validate
 * upload
-* sync --dry-run
+* sync
 
 # status
 
 I am still building this at the moment.
+
+# disclaimer
+
+This code has not been reviewed for security so use at your own risk. 
+
+# contributions
+
+Suggestions are welcome especially around the method I have used to encrypt and decrypt the yaml bundle file.
 
 # License
 

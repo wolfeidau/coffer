@@ -3,7 +3,6 @@ package coffer
 import (
 	"bytes"
 	"encoding/hex"
-	"io/ioutil"
 )
 
 var (
@@ -19,10 +18,10 @@ func MustEncrypt(cofferFile string, secret string) {
 
 	payload := mustEncryptPayload(data, key)
 
-	mustWriteFile(cofferFile, payload)
+	mustWriteFile(cofferFile, payload, 600)
 }
 
-func MustDecrypt(cofferFile string, secret string) {
+func MustDecrypt(cofferFile string, secret string) []byte {
 
 	key := buildKey(secret)
 
@@ -30,26 +29,8 @@ func MustDecrypt(cofferFile string, secret string) {
 
 	payload := mustDecryptPayload(data, key)
 
-	mustWriteFile(cofferFile, payload)
+	return mustWriteFile(cofferFile, payload, 600)
 
-}
-
-func mustReadFile(path string) []byte {
-	data, err := ioutil.ReadFile(path)
-
-	if err != nil {
-		Fatalf("Unable to open coffer-file: %v", err)
-	}
-	return data
-}
-
-func mustWriteFile(path string, data []byte) []byte {
-	err := ioutil.WriteFile(path, data, 600)
-
-	if err != nil {
-		Fatalf("Unable to open coffer-file: %v", err)
-	}
-	return data
 }
 
 func buildKey(secret string) []byte {
