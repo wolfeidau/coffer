@@ -1,12 +1,12 @@
 # coffer
 
-This command line tool is will retrieve an encrypted bundle of data from an s3 bucket and create files on the local host.
+This command line tool is will retrieve an encrypted coffer of data from an s3 bucket and create files on the local host.
 
 A typical use case for coffer is you have a docker container which needs to retrieve on startup some file based secrets and apply them prior to starting a service. This is quite common requirement with continuous integration agents running in docker containers.
 
-# bundle format
+# coffer format
 
-The bundle file is a YAML file containing a list of files, there mode and some content. At the moment all files are created with the normal default of the running user.
+The coffer file is a YAML file containing a list of files, there mode and some content. At the moment all files are created with the normal default of the running user.
 
 ```yaml
 files:
@@ -31,23 +31,15 @@ The command reads the following environment variables.
 
 Sub commands for this tool are:
 
-* encypt
-* decrypt
-* upload
-* download
-* sync
+* encypt, this encrypts the coffer file.
+* decrypt, this decrypts the coffer file, required at the moment if you want to edit it.
+* upload, uploads the coffer to s3, ensuring that only encrypted data gets uploaded.
+* download, pull down a coffer and validates it, file is only saved if it is decrypts and is valid.
+* sync, sync a coffer with the file system, this creates/modifies/chmods files based on the information in the yaml.
 
 # encryption
 
-This utility currently uses GCM and AES256 see https://github.com/wolfeidau/coffer/blob/master/crypto.go.
-
-# disclaimer
-
-This code has not been reviewed for security so use at your own risk. 
-
-# contributions
-
-Suggestions are welcome especially around the method I have used to encrypt and decrypt the yaml bundle file.
+This now uses `golang.org/x/crypto/nacl/secretbox` which is a great little library designed to help people do message encryption correctly.
 
 # License
 
