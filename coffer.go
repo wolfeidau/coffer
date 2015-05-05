@@ -95,7 +95,7 @@ func mustEncryptPayload(data []byte, secret string) []byte {
 		Fatalf("coffer file alread encrypted")
 	}
 
-	payload := encrypt(data, key, CofferFilePrefix)
+	payload := encrypt(data, key)
 	encoded := make([]byte, hex.EncodedLen(len(payload)))
 
 	n := hex.Encode(encoded, payload)
@@ -121,7 +121,7 @@ func mustDecryptPayload(data []byte, secret string) []byte {
 		}
 
 		Infof("decoded data len: %d", n)
-		return decrypt(decoded, key, CofferFilePrefix)
+		return decrypt(decoded, key)
 	}
 
 	Fatalf("unable to decrypt coffer")

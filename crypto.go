@@ -1,62 +1,59 @@
 package coffer
 
 import (
-	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/rand"
+
+	"golang.org/x/crypto/nacl/secretbox"
 )
 
-const nonceLen = 12
+func decrypt(ct, key []byte) []byte {
 
-func decrypt(ct, key, ad []byte) []byte {
+	var k [32]byte
+	var nonce [24]byte
+	var opened []byte
 
-	nonce := ct[:nonceLen]
-	ct = ct[nonceLen:]
+	// extract the nonce from the start of the message
+	copy(nonce[:], ct[:24])
 
-	// Create the AES cipher
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		Fatalf("Cannot load cipher: %v", err)
+	copy(k[:], key[:32])
+
+	Debugf("nonce=%x key=%x box=%x", nonce, k, ct[24:])
+
+	// out, box, nonce, key
+	var ok bool
+	opened, ok = secretbox.Open(opened[:0], ct[24:], &nonce, &k)
+
+	if !ok {
+		Fatalf("Failed to decrypt data")
 	}
 
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		Fatalf("New GCM failed: %v", err)
-	}
-
-	plaintext, err := aesgcm.Open(nil, nonce, ct, ad)
-	if err != nil {
-		Fatalf("Open payload failed: %v", err)
-	}
-
-	return plaintext
+	return opened
 }
 
-func encrypt(plaintext, key, ad []byte) []byte {
+func encrypt(plaintext, key []byte) []byte {
+
+	var k [32]byte
+	var nonce [24]byte
+	var box []byte
 
 	// must be unique for each encrypt
-	nonce := generateNonce()
+	rand.Reader.Read(nonce[:])
+	copy(k[:], key[:32])
 
-	// Create the AES cipher
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		Fatalf("Cant load cipher: %v", err)
-	}
+	// out, message, nonce, key
+	box = secretbox.Seal(box[:0], plaintext, &nonce, &k)
 
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		Fatalf("New GCM failed: %v", err)
-	}
+	Debugf("nonce=%x key=%x box=%x", nonce, k, box)
 
-	ct := aesgcm.Seal(nil, nonce, plaintext, ad)
+	// add the nonce to the start of the message
+	box = append(nonce[:], box...)
 
-	return bytes.Join([][]byte{nonce, ct}, []byte{})
+	return box
 }
 
-func generateNonce() []byte {
+func generateNonce(ln int) []byte {
 
-	b := make([]byte, nonceLen)
+	b := make([]byte, ln)
 	_, err := rand.Read(b)
 	if err != nil {
 		Fatalf("Failed to generate random nonce: %v", err)
