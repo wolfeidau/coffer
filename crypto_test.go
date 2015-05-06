@@ -2,7 +2,6 @@ package coffer
 
 import (
 	"crypto/rand"
-	"fmt"
 	"testing"
 
 	"github.com/bmizerany/assert"

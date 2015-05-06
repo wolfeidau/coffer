@@ -6,7 +6,11 @@ import (
 	"golang.org/x/crypto/nacl/secretbox"
 )
 
+// decrypt basic wrapper around secretbox which will decrypt a box
+// using ct which is comprised of a nonce followed by the box.
 func decrypt(ct, key []byte) []byte {
+
+	mustValidateKey(key)
 
 	var k [32]byte
 	var nonce [24]byte
@@ -16,8 +20,6 @@ func decrypt(ct, key []byte) []byte {
 	copy(nonce[:], ct[:24])
 
 	copy(k[:], key[:32])
-
-	Debugf("nonce=%x key=%x box=%x", nonce, k, ct[24:])
 
 	// out, box, nonce, key
 	var ok bool
@@ -30,7 +32,11 @@ func decrypt(ct, key []byte) []byte {
 	return opened
 }
 
+// encrypt basic wrapper around secretbox which will encrypt a plain text
+// and return a message comprised of the nonce followed by the encrypted box.
 func encrypt(plaintext, key []byte) []byte {
+
+	mustValidateKey(key)
 
 	var k [32]byte
 	var nonce [24]byte
@@ -43,20 +49,14 @@ func encrypt(plaintext, key []byte) []byte {
 	// out, message, nonce, key
 	box = secretbox.Seal(box[:0], plaintext, &nonce, &k)
 
-	Debugf("nonce=%x key=%x box=%x", nonce, k, box)
-
 	// add the nonce to the start of the message
 	box = append(nonce[:], box...)
 
 	return box
 }
 
-func generateNonce(ln int) []byte {
-
-	b := make([]byte, ln)
-	_, err := rand.Read(b)
-	if err != nil {
-		Fatalf("Failed to generate random nonce: %v", err)
+func mustValidateKey(key []byte) {
+	if len(key) < 32 {
+		Fatalf("Key validatation failed, must be 32 bytes long")
 	}
-	return b
 }
