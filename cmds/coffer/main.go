@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/alecthomas/kingpin"
 	"github.com/wolfeidau/coffer"
-	"gopkg.in/alecthomas/kingpin.v1"
 )
 
 var (
@@ -22,10 +22,13 @@ var (
 	uploadBucket   = upload.Flag("bucket", "Name of the s3 bucket").OverrideDefaultFromEnvar("S3_BUCKET").Required().String()
 	download       = app.Command("download", "Download a bundle from s3.")
 	downloadBucket = download.Flag("bucket", "Name of the s3 bucket").OverrideDefaultFromEnvar("S3_BUCKET").Required().String()
+
+	// app version updated by build script
+	Version = ""
 )
 
 func main() {
-	kingpin.Version("0.0.1")
+	app.Version(Version)
 
 	if *debug {
 		coffer.Verbose = true
