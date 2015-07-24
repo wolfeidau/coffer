@@ -36,7 +36,7 @@ func MustSync(cofferFile, secret, base string) {
 
 	// base not set
 	if base == "" {
-		base, _ = os.Getwd() // assign the current working directory
+		base = "/" // set the base directory to '/'
 	}
 
 	payload := mustReadFile(cofferFile)
@@ -80,8 +80,10 @@ func MustDownloadSync(cofferFile, secret, bucket, base string) {
 
 	// base not set
 	if base == "" {
-		base, _ = os.Getwd() // assign the current working directory
+		base = "/" // set the base directory to '/'
 	}
+
+	filename := path.Base(cofferFile)
 
 	payload := mustDownload(bucket, filename)
 
