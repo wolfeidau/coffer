@@ -34,6 +34,11 @@ func MustDecrypt(cofferFile, secret string) []byte {
 
 func MustSync(cofferFile, secret, base string) {
 
+	// base not set
+	if base == "" {
+		base, _ = os.Getwd() // assign the current working directory
+	}
+
 	payload := mustReadFile(cofferFile)
 
 	// if the coffer file is encrypted, decrypt it
