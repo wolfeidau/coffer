@@ -76,6 +76,27 @@ func MustDownload(cofferFile, secret, bucket string) {
 	mustWriteFile(cofferFile, payload, OwnerRead)
 }
 
+func MustDownloadSync(cofferFile, secret, bucket, base string) {
+
+	// base not set
+	if base == "" {
+		base, _ = os.Getwd() // assign the current working directory
+	}
+
+	payload := mustDownload(bucket, filename)
+
+	// if the coffer file is encrypted, decrypt it
+	if isEncrypted(payload) {
+		payload = mustDecryptPayload(payload, secret)
+	}
+
+	bundle := mustDecodeBundle(payload)
+
+	bundle.MustValidate()
+
+	mustExtractBundle(bundle, base)
+}
+
 func buildKey(secret string) []byte {
 
 	if len(secret) > CofferBlockSize {

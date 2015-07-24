@@ -23,7 +23,11 @@ var (
 	download       = app.Command("download", "Download a bundle from s3.")
 	downloadBucket = download.Flag("bucket", "Name of the s3 bucket").OverrideDefaultFromEnvar("S3_BUCKET").Required().String()
 
-	// app version updated by build script
+	downloadSync       = app.Command("download-sync", "Download a bundle from s3 and sync with the local filesystem.")
+	downloadSyncBucket = downloadSync.Flag("bucket", "Name of the s3 bucket").OverrideDefaultFromEnvar("S3_BUCKET").Required().String()
+	downloadSyncBase   = downloadSync.Flag("base", "Set a base path for testing.").String()
+
+	// Version app version updated by build script
 	Version = ""
 )
 
@@ -53,5 +57,8 @@ func main() {
 	case download.FullCommand():
 		coffer.Debugf("download")
 		coffer.MustDownload(*cofferFile, *secret, *downloadBucket)
+	case downloadSync.FullCommand():
+		coffer.Debugf("download-sync")
+		coffer.MustDownloadSync(*cofferFile, *secret, *downloadSyncBucket, *downloadSyncBase)
 	}
 }
