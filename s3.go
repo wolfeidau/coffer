@@ -4,16 +4,18 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/awslabs/aws-sdk-go/aws"
-	"github.com/awslabs/aws-sdk-go/aws/awsutil"
-	"github.com/awslabs/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 func mustUpload(bucket string, filename string, payload []byte) {
 
 	Infof("putting file=%s into bucket=%s length=%d", filename, bucket, len(payload))
 
-	svc := s3.New(nil)
+	svc := newS3Svc()
 
 	params := &s3.PutObjectInput{
 		Bucket:        aws.String(bucket),   // Required
@@ -24,10 +26,11 @@ func mustUpload(bucket string, filename string, payload []byte) {
 
 	resp, err := svc.PutObject(params)
 
-	if awserr := aws.Error(err); awserr != nil {
-		// A service error occurred.
-		Fatalf("AWS Error code: %v message: %s", awserr.Code, awserr.Message)
-	} else if err != nil {
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			// A service error occurred.
+			Fatalf("AWS Error code: %v message: %s", awsErr.Code(), awsErr.Message())
+		}
 		// A non-service error occurred.
 		Fatalf("Error make request to AWS: %v", err)
 	}
@@ -41,7 +44,7 @@ func mustDownload(bucket string, filename string) []byte {
 
 	Infof("getting file=%s from bucket=%s", filename, bucket)
 
-	svc := s3.New(nil)
+	svc := newS3Svc()
 
 	params := &s3.GetObjectInput{
 		Bucket: aws.String(bucket),   // Required
@@ -50,10 +53,11 @@ func mustDownload(bucket string, filename string) []byte {
 
 	resp, err := svc.GetObject(params)
 
-	if awserr := aws.Error(err); awserr != nil {
-		// A service error occurred.
-		Fatalf("AWS Error code: %v message: %s", awserr.Code, awserr.Message)
-	} else if err != nil {
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			// A service error occurred.
+			Fatalf("AWS Error code: %v message: %s", awsErr.Code(), awsErr.Message())
+		}
 		// A non-service error occurred.
 		Fatalf("Error make request to AWS: %v", err)
 	}
@@ -68,4 +72,16 @@ func mustDownload(bucket string, filename string) []byte {
 	Infof("response %s", awsutil.StringValue(resp))
 
 	return payload.Bytes()
+}
+
+func newS3Svc() *s3.S3 {
+
+	// setup the creds chain to configure from environment and ec2 IAM role.
+	creds := credentials.NewChainCredentials(
+		[]credentials.Provider{
+			&credentials.EnvProvider{},
+			&credentials.EC2RoleProvider{},
+		})
+
+	return s3.New(&aws.Config{Credentials: creds})
 }
