@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/wolfeidau/coffer"
@@ -34,31 +35,27 @@ var (
 func main() {
 	app.Version(Version)
 
-	if *debug {
-		coffer.Verbose = true
-	}
-
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	// encrypt the coffer file
 	case encrypt.FullCommand():
-		coffer.Debugf("encrypt")
+		log.Printf("encrypt")
 		coffer.MustEncrypt(*cofferFile, *secret)
 	// decrypt the coffer file
 	case decrypt.FullCommand():
-		coffer.Debugf("decrypt")
+		log.Printf("decrypt")
 		coffer.MustDecrypt(*cofferFile, *secret)
 	// sync the file system to the coffer file
 	case sync.FullCommand():
-		coffer.Debugf("sync")
+		log.Printf("sync")
 		coffer.MustSync(*cofferFile, *secret, *base)
 	case upload.FullCommand():
-		coffer.Debugf("upload")
+		log.Printf("upload")
 		coffer.MustUpload(*cofferFile, *secret, *uploadBucket)
 	case download.FullCommand():
-		coffer.Debugf("download")
+		log.Printf("download")
 		coffer.MustDownload(*cofferFile, *secret, *downloadBucket)
 	case downloadSync.FullCommand():
-		coffer.Debugf("download-sync")
+		log.Printf("download-sync")
 		coffer.MustDownloadSync(*cofferFile, *secret, *downloadSyncBucket, *downloadSyncBase)
 	}
 }

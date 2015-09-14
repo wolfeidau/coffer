@@ -3,8 +3,11 @@ package coffer
 import (
 	"bytes"
 	"encoding/hex"
+	"log"
 	"os"
 	"path"
+
+	"github.com/wolfeidau/coffer/nacl"
 )
 
 var (
@@ -102,7 +105,7 @@ func MustDownloadSync(cofferFile, secret, bucket, base string) {
 func buildKey(secret string) []byte {
 
 	if len(secret) > CofferBlockSize {
-		Infof("secret is longer than block size and will be trucated")
+		log.Printf("secret is longer than block size and will be trucated")
 	}
 
 	padded := make([]byte, CofferBlockSize)
@@ -120,15 +123,15 @@ func mustEncryptPayload(data []byte, secret string) []byte {
 	key := buildKey(secret)
 
 	if bytes.HasPrefix(data, CofferFilePrefix) {
-		Fatalf("coffer file alread encrypted")
+		log.Fatalf("coffer file alread encrypted")
 	}
 
-	payload := encrypt(data, key)
+	payload := nacl.Encrypt(data, key)
 	encoded := make([]byte, hex.EncodedLen(len(payload)))
 
 	n := hex.Encode(encoded, payload)
 
-	Infof("encoded data len: %d", n)
+	log.Printf("encoded data len: %d", n)
 
 	return bytes.Join([][]byte{CofferFilePrefix, encoded, []byte("\n")}, []byte{})
 }
@@ -145,14 +148,14 @@ func mustDecryptPayload(data []byte, secret string) []byte {
 
 		n, err := hex.Decode(decoded, payload)
 		if err != nil {
-			Fatalf("coffer file could not be decoded")
+			log.Fatalf("coffer file could not be decoded")
 		}
 
-		Infof("decoded data len: %d", n)
-		return decrypt(decoded, key)
+		log.Printf("decoded data len: %d", n)
+		return nacl.Decrypt(decoded, key)
 	}
 
-	Fatalf("unable to decrypt coffer")
+	log.Fatalf("unable to decrypt coffer")
 
 	return []byte{}
 }

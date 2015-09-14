@@ -1,4 +1,4 @@
-package coffer
+package nacl
 
 import (
 	"crypto/rand"
@@ -21,9 +21,9 @@ func TestEncryptions(t *testing.T) {
 	rand.Reader.Read(key[:])
 	rand.Reader.Read(nonce[:])
 
-	enc := encrypt(msg, key[:])
+	enc := Encrypt(msg, key[:])
 
-	dec := decrypt(enc, key[:])
+	dec := Decrypt(enc, key[:])
 
 	assert.Equal(t, msg, dec)
 }

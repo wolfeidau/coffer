@@ -3,6 +3,7 @@ package coffer
 import (
 	"bytes"
 	"io"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -12,7 +13,7 @@ import (
 
 func mustUpload(bucket string, filename string, payload []byte) {
 
-	Infof("putting file=%s into bucket=%s length=%d", filename, bucket, len(payload))
+	log.Printf("putting file=%s into bucket=%s length=%d", filename, bucket, len(payload))
 
 	svc := newS3Svc()
 
@@ -28,20 +29,20 @@ func mustUpload(bucket string, filename string, payload []byte) {
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
 			// A service error occurred.
-			Fatalf("AWS Error code: %v message: %s", awsErr.Code(), awsErr.Message())
+			log.Fatalf("AWS Error code: %v message: %s", awsErr.Code(), awsErr.Message())
 		}
 		// A non-service error occurred.
-		Fatalf("Error make request to AWS: %v", err)
+		log.Fatalf("Error make request to AWS: %v", err)
 	}
 
 	// Pretty-print the response data.
-	Infof("response %vs", resp)
+	log.Printf("response %vs", resp)
 
 }
 
 func mustDownload(bucket string, filename string) []byte {
 
-	Infof("getting file=%s from bucket=%s", filename, bucket)
+	log.Printf("getting file=%s from bucket=%s", filename, bucket)
 
 	svc := newS3Svc()
 
@@ -55,10 +56,10 @@ func mustDownload(bucket string, filename string) []byte {
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
 			// A service error occurred.
-			Fatalf("AWS Error code: %v message: %s", awsErr.Code(), awsErr.Message())
+			log.Fatalf("AWS Error code: %v message: %s", awsErr.Code(), awsErr.Message())
 		}
 		// A non-service error occurred.
-		Fatalf("Error make request to AWS: %v", err)
+		log.Fatalf("Error make request to AWS: %v", err)
 	}
 
 	defer resp.Body.Close()
@@ -68,7 +69,7 @@ func mustDownload(bucket string, filename string) []byte {
 	io.Copy(payload, resp.Body)
 
 	// Pretty-print the response data.
-	Infof("response %v", resp)
+	log.Printf("response %v", resp)
 
 	return payload.Bytes()
 }

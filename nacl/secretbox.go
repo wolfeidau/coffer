@@ -1,14 +1,15 @@
-package coffer
+package nacl
 
 import (
 	"crypto/rand"
+	"log"
 
 	"golang.org/x/crypto/nacl/secretbox"
 )
 
-// decrypt basic wrapper around secretbox which will decrypt a box
+// Decrypt basic wrapper around secretbox which will decrypt a box
 // using ct which is comprised of a nonce followed by the box.
-func decrypt(ct, key []byte) []byte {
+func Decrypt(ct, key []byte) []byte {
 
 	mustValidateKey(key)
 
@@ -26,15 +27,15 @@ func decrypt(ct, key []byte) []byte {
 	opened, ok = secretbox.Open(opened[:0], ct[24:], &nonce, &k)
 
 	if !ok {
-		Fatalf("Failed to decrypt data")
+		log.Fatalln("Failed to decrypt data")
 	}
 
 	return opened
 }
 
-// encrypt basic wrapper around secretbox which will encrypt a plain text
+// Encrypt basic wrapper around secretbox which will encrypt a plain text
 // and return a message comprised of the nonce followed by the encrypted box.
-func encrypt(plaintext, key []byte) []byte {
+func Encrypt(plaintext, key []byte) []byte {
 
 	mustValidateKey(key)
 
@@ -57,6 +58,6 @@ func encrypt(plaintext, key []byte) []byte {
 
 func mustValidateKey(key []byte) {
 	if len(key) < 32 {
-		Fatalf("Key validatation failed, must be 32 bytes long")
+		log.Fatalln("Key validatation failed, must be 32 bytes long")
 	}
 }
