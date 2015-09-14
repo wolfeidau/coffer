@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/alecthomas/kingpin"
 	"github.com/wolfeidau/coffer"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (

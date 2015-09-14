@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
@@ -21,7 +20,7 @@ func mustUpload(bucket string, filename string, payload []byte) {
 		Bucket:        aws.String(bucket),   // Required
 		Key:           aws.String(filename), // Required
 		Body:          bytes.NewReader(payload),
-		ContentLength: aws.Long(int64(len(payload))),
+		ContentLength: aws.Int64(int64(len(payload))),
 	}
 
 	resp, err := svc.PutObject(params)
@@ -36,7 +35,7 @@ func mustUpload(bucket string, filename string, payload []byte) {
 	}
 
 	// Pretty-print the response data.
-	Infof("response %s", awsutil.StringValue(resp))
+	Infof("response %vs", resp)
 
 }
 
@@ -69,7 +68,7 @@ func mustDownload(bucket string, filename string) []byte {
 	io.Copy(payload, resp.Body)
 
 	// Pretty-print the response data.
-	Infof("response %s", awsutil.StringValue(resp))
+	Infof("response %v", resp)
 
 	return payload.Bytes()
 }
@@ -77,11 +76,7 @@ func mustDownload(bucket string, filename string) []byte {
 func newS3Svc() *s3.S3 {
 
 	// setup the creds chain to configure from environment and ec2 IAM role.
-	creds := credentials.NewChainCredentials(
-		[]credentials.Provider{
-			&credentials.EnvProvider{},
-			&credentials.EC2RoleProvider{},
-		})
+	creds := credentials.NewEnvCredentials()
 
 	return s3.New(&aws.Config{Credentials: creds})
 }
