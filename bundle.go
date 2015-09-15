@@ -6,10 +6,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Bundle bundle of files and their related information
 type Bundle struct {
 	Files map[string]*FileData `yaml:"files"`
 }
 
+// MustValidate checks the validity of the bundle
 func (b *Bundle) MustValidate() {
 
 	for k, f := range b.Files {
@@ -21,6 +23,7 @@ func (b *Bundle) MustValidate() {
 	}
 }
 
+// FileData an encoded file with it's permissions
 type FileData struct {
 	Mode    uint32 `yaml:"mode"`
 	Owner   string `yaml:"owner"`
@@ -28,6 +31,7 @@ type FileData struct {
 	Content string `yaml:"content"`
 }
 
+// FileData checks the validity of the file data structure.
 func (f *FileData) MustValidate(name string) {
 	if f.Mode == 0 {
 		log.Fatalf("Validation failed: file mode must be set for %s", name)

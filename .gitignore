@@ -2,3 +2,4 @@ testcoffer
 build
 release
 *.coffer
+testcoffer.yaml

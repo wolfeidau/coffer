@@ -41,6 +41,14 @@ Sub commands for this tool are:
 
 This now uses `golang.org/x/crypto/nacl/secretbox` which is a great little library designed to help people do message encryption correctly.
 
+# change log
+
+# 2.0
+
+* Changed file format, now uses YAML as a container for meta data and encrypted payload
+* Added a version and name field
+* Added support for KMS to remove the need for a secret
+
 # License
 
-This code is released under the MIT license see the LICENSE.md file for more details. 
+This code is released under the MIT license see the LICENSE.md file for more details.

@@ -12,7 +12,12 @@ var (
 	app        = kingpin.New("coffer", "A command line tool to manage encrypted coffer files.")
 	debug      = app.Flag("debug", "Enable debug mode.").Bool()
 	cofferFile = app.Flag("coffer-file", "Coffer file.").Required().String()
-	secret     = app.Flag("secret", "Coffer secret.").OverrideDefaultFromEnvar("COFFER_SECRET").Required().String()
+
+	// either we supply a secret
+	secret = app.Flag("secret", "Coffer secret.").OverrideDefaultFromEnvar("COFFER_SECRET").String()
+
+	// or we are using KMS
+	key = app.Flag("key", "The KMS key-id of the master key to use.").OverrideDefaultFromEnvar("COFFER_KEY").String()
 
 	// commands
 	encrypt        = app.Command("encrypt", "Encrypt the coffer file.")
