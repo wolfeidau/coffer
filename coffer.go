@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/wolfeidau/coffer/kms"
 	"github.com/wolfeidau/coffer/nacl"
 )
 
@@ -19,28 +20,28 @@ var (
 )
 
 // MustEncrypt encrypt the supplied file
-func MustEncrypt(cofferFile, secret string) {
+func MustEncrypt(cofferFile, alias string) {
 
 	data := mustReadFile(cofferFile)
 
-	payload := mustEncryptPayload(data, secret)
+	payload := mustEncryptPayload(data, alias)
 
 	mustWriteFile(cofferFile, payload, OwnerRead)
 }
 
 // MustDecrypt decrypt the supplied file
-func MustDecrypt(cofferFile, secret string) []byte {
+func MustDecrypt(cofferFile, alias string) []byte {
 
 	data := mustReadFile(cofferFile)
 
-	payload := mustDecryptPayload(data, secret)
+	payload := mustDecryptPayload(data, alias)
 
 	return mustWriteFile(cofferFile, payload, OwnerRead)
 
 }
 
 // MustSync sync the file up to S3
-func MustSync(cofferFile, secret, base string) {
+func MustSync(cofferFile, alias, base string) {
 
 	// base not set
 	if base == "" {
@@ -51,7 +52,7 @@ func MustSync(cofferFile, secret, base string) {
 
 	// if the coffer file is encrypted, decrypt it
 	if isEncrypted(payload) {
-		payload = mustDecryptPayload(payload, secret)
+		payload = mustDecryptPayload(payload, alias)
 	}
 
 	bundle := mustDecodeBundle(payload)
@@ -62,13 +63,13 @@ func MustSync(cofferFile, secret, base string) {
 }
 
 // MustUpload upload the file to the supplied s3 bucket
-func MustUpload(cofferFile, secret, bucket string) {
+func MustUpload(cofferFile, alias, bucket string) {
 
 	payload := mustReadFile(cofferFile)
 
 	// if the coffer is not encrypted
 	if !isEncrypted(payload) {
-		payload = mustEncryptPayload(payload, secret)
+		payload = mustEncryptPayload(payload, alias)
 	}
 
 	filename := path.Base(cofferFile)
@@ -77,7 +78,7 @@ func MustUpload(cofferFile, secret, bucket string) {
 }
 
 // MustDownload download the file from the supplied s3 bucket
-func MustDownload(cofferFile, secret, bucket string) {
+func MustDownload(cofferFile, alias, bucket string) {
 
 	filename := path.Base(cofferFile)
 
@@ -88,7 +89,7 @@ func MustDownload(cofferFile, secret, bucket string) {
 
 // MustDownloadSync download the file from the supplied s3 bucket and sync
 // it to the filesystem
-func MustDownloadSync(cofferFile, secret, bucket, base string) {
+func MustDownloadSync(cofferFile, alias, bucket, base string) {
 
 	// base not set
 	if base == "" {
@@ -101,7 +102,7 @@ func MustDownloadSync(cofferFile, secret, bucket, base string) {
 
 	// if the coffer file is encrypted, decrypt it
 	if isEncrypted(payload) {
-		payload = mustDecryptPayload(payload, secret)
+		payload = mustDecryptPayload(payload, alias)
 	}
 
 	bundle := mustDecodeBundle(payload)
@@ -109,18 +110,6 @@ func MustDownloadSync(cofferFile, secret, bucket, base string) {
 	bundle.MustValidate()
 
 	mustExtractBundle(bundle, base)
-}
-
-func buildKey(secret string) []byte {
-
-	if len(secret) > CofferBlockSize {
-		log.Printf("secret is longer than block size and will be trucated")
-	}
-
-	padded := make([]byte, CofferBlockSize)
-	copy(padded, []byte(secret))
-
-	return padded
 }
 
 func isEncrypted(data []byte) bool {
@@ -134,28 +123,32 @@ func isEncrypted(data []byte) bool {
 	return coffer.Validate()
 }
 
-func mustEncryptPayload(data []byte, secret string) []byte {
-
-	key := buildKey(secret)
+func mustEncryptPayload(data []byte, alias string) []byte {
 
 	if isEncrypted(data) {
 		log.Fatalf("coffer file already encrypted")
 	}
 
-	payload := nacl.Encrypt(data, key)
-	encoded := base64.StdEncoding.EncodeToString(payload)
+	key, err := kms.GenerateDataKey(alias)
 
-	log.Printf("encoded data len: %d", len(encoded))
+	if err != nil {
+		log.Fatalf("kms error: %s", err.Error())
+	}
+
+	payload := nacl.Encrypt(data, key.Plaintext)
+	cipherText := base64.StdEncoding.EncodeToString(payload)
+	keyCipherText := base64.StdEncoding.EncodeToString(key.CiphertextBlob)
+
+	log.Printf("encoded data len: %d", len(cipherText))
 
 	return mustEncodeCoffer(&Coffer{
+		Key:        keyCipherText,
 		Version:    Version,
-		CipherText: encoded,
+		CipherText: cipherText,
 	})
 }
 
-func mustDecryptPayload(data []byte, secret string) []byte {
-
-	key := buildKey(secret)
+func mustDecryptPayload(data []byte, alias string) []byte {
 
 	coffer, err := DecodeCoffer(data)
 
@@ -165,6 +158,18 @@ func mustDecryptPayload(data []byte, secret string) []byte {
 
 	if coffer.Validate() {
 
+		keyData, err := base64.StdEncoding.DecodeString(coffer.Key)
+
+		if err != nil {
+			log.Fatalf("unable to decode key")
+		}
+
+		key, err := kms.Decrypt(keyData)
+
+		if err != nil {
+			log.Fatalf("kms error: %s", err.Error())
+		}
+
 		decoded, err := base64.StdEncoding.DecodeString(coffer.CipherText)
 
 		if err != nil {
@@ -172,10 +177,10 @@ func mustDecryptPayload(data []byte, secret string) []byte {
 		}
 
 		log.Printf("decoded data len: %d", len(decoded))
-		return nacl.Decrypt(decoded, key)
+		return nacl.Decrypt(decoded, key.Plaintext)
 	}
 
-	log.Fatalf("unable to decrypt coffer")
+	log.Fatalf("invalid coffer file, unable to decrypt")
 
 	return []byte{}
 }

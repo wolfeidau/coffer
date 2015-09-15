@@ -13,8 +13,8 @@ var (
 	debug      = app.Flag("debug", "Enable debug mode.").Bool()
 	cofferFile = app.Flag("coffer-file", "Coffer file.").Required().String()
 
-	// either we supply a secret
-	secret = app.Flag("secret", "Coffer secret.").OverrideDefaultFromEnvar("COFFER_SECRET").String()
+	// either we supply a alias
+	alias = app.Flag("alias", "KMS key alias.").OverrideDefaultFromEnvar("COFFER_KEY_ALIAS").Default("alias/coffer").String()
 
 	// or we are using KMS
 	key = app.Flag("key", "The KMS key-id of the master key to use.").OverrideDefaultFromEnvar("COFFER_KEY").String()
@@ -44,23 +44,23 @@ func main() {
 	// encrypt the coffer file
 	case encrypt.FullCommand():
 		log.Printf("encrypt")
-		coffer.MustEncrypt(*cofferFile, *secret)
+		coffer.MustEncrypt(*cofferFile, *alias)
 	// decrypt the coffer file
 	case decrypt.FullCommand():
 		log.Printf("decrypt")
-		coffer.MustDecrypt(*cofferFile, *secret)
+		coffer.MustDecrypt(*cofferFile, *alias)
 	// sync the file system to the coffer file
 	case sync.FullCommand():
 		log.Printf("sync")
-		coffer.MustSync(*cofferFile, *secret, *base)
+		coffer.MustSync(*cofferFile, *alias, *base)
 	case upload.FullCommand():
 		log.Printf("upload")
-		coffer.MustUpload(*cofferFile, *secret, *uploadBucket)
+		coffer.MustUpload(*cofferFile, *alias, *uploadBucket)
 	case download.FullCommand():
 		log.Printf("download")
-		coffer.MustDownload(*cofferFile, *secret, *downloadBucket)
+		coffer.MustDownload(*cofferFile, *alias, *downloadBucket)
 	case downloadSync.FullCommand():
 		log.Printf("download-sync")
-		coffer.MustDownloadSync(*cofferFile, *secret, *downloadSyncBucket, *downloadSyncBase)
+		coffer.MustDownloadSync(*cofferFile, *alias, *downloadSyncBucket, *downloadSyncBase)
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
@@ -77,7 +78,10 @@ func mustDownload(bucket string, filename string) []byte {
 func newS3Svc() *s3.S3 {
 
 	// setup the creds chain to configure from environment and ec2 IAM role.
-	creds := credentials.NewEnvCredentials()
+	creds := credentials.NewChainCredentials([]credentials.Provider{
+		&credentials.SharedCredentialsProvider{},
+		&ec2rolecreds.EC2RoleProvider{},
+	})
 
 	return s3.New(&aws.Config{Credentials: creds})
 }

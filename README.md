@@ -1,12 +1,19 @@
 # coffer
 
-This command line tool is will retrieve an encrypted coffer of data from an s3 bucket and create files on the local host.
+This command line tool is designed to simplify storage and retrieval of secrets in [Amazon Web Services](https://aws.amazon.com).
+
+It uses the following services:
+
+* [Simple Storage Service](https://aws.amazon.com/s3/) (S3) to store secrets encrypted in files
+* [Key Management Service](https://aws.amazon.com/kms/) (KMS) to manage encryption keys which encrypt/decrypt your secrets
 
 A typical use case for coffer is you have a docker container which needs to retrieve on startup some file based secrets and apply them prior to starting a service. This is quite common requirement with continuous integration agents running in docker containers.
 
-# coffer format
+# coffer bundle format
 
-The coffer file is a YAML file containing a list of files, there mode and some content. At the moment all files are created with the normal default of the running user.
+coffer uses a a YAML file file to package a bunch of files together. The format of this file is illustrated below.
+
+coffer has the ability to syncronise the files described in this bundle with the filesystem, creating/updating and changing the mode of the files.
 
 ```yaml
 files:
@@ -21,11 +28,10 @@ files:
 
 The command reads the following environment variables.
 
-* `AWS_ACCESS_KEY`
-* `AWS_SECRET_KEY`
-* `AWS_REGION`
-* `COFFER_SECRET`
-* `S3_BUCKET`
+* `AWS_REGION` the AWS region
+* `AWS_PROFILE` the AWS profile to use
+* `COFFER_ALIAS` the alias name of the file in KMS
+* `S3_BUCKET` the s3 bucket which the file will be uploaded
 
 # usage
 
