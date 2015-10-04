@@ -10,7 +10,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-var s3svc = s3.New(nil)
+// ObjectStorage is a sub-set of the capabilities of the S3 client.
+type ObjectStorage interface {
+	ListObjects(*s3.ListObjectsInput) (*s3.ListObjectsOutput, error)
+	DeleteObject(*s3.DeleteObjectInput) (*s3.DeleteObjectOutput, error)
+	PutObject(*s3.PutObjectInput) (*s3.PutObjectOutput, error)
+	GetObject(*s3.GetObjectInput) (*s3.GetObjectOutput, error)
+}
+
+var s3Svc ObjectStorage
+
+func init() {
+	s3Svc = s3.New(nil)
+}
 
 func mustUpload(bucket string, filename string, payload []byte) {
 
@@ -23,7 +35,7 @@ func mustUpload(bucket string, filename string, payload []byte) {
 		ContentLength: aws.Int64(int64(len(payload))),
 	}
 
-	resp, err := s3svc.PutObject(params)
+	resp, err := s3Svc.PutObject(params)
 
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
@@ -48,7 +60,7 @@ func mustDownload(bucket string, filename string) []byte {
 		Key:    aws.String(filename), // Required
 	}
 
-	resp, err := s3svc.GetObject(params)
+	resp, err := s3Svc.GetObject(params)
 
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
