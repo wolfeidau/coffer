@@ -1,11 +1,23 @@
-package kms
+package coffer
 
 import (
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
 	"github.com/aws/aws-sdk-go/service/kms"
 )
+
+// KeyManagement is a sub-set of the capabilities of the KMS client.
+type KeyManagement interface {
+	GenerateDataKey(*kms.GenerateDataKeyInput) (*kms.GenerateDataKeyOutput, error)
+	Decrypt(*kms.DecryptInput) (*kms.DecryptOutput, error)
+}
+
+var kmsSvc KeyManagement
+
+func init() {
+	kmsSvc = kms.New(nil)
+}
 
 // DataKey which contains the details of the KMS key
 type DataKey struct {
@@ -13,39 +25,26 @@ type DataKey struct {
 	Plaintext      []byte
 }
 
-// Decrypt decrypt the cipher text using the provided key.
-func Decrypt(ciphertext []byte) (*DataKey, error) {
-
-	// setup the creds chain to configure from environment and ec2 IAM role.
-	creds := credentials.NewChainCredentials(
-		[]credentials.Provider{
-			&credentials.SharedCredentialsProvider{},
-			&ec2rolecreds.EC2RoleProvider{},
-		})
-
-	svc := kms.New(&aws.Config{Credentials: creds})
+func mustDecrypt(ciphertext []byte) *DataKey {
 
 	params := &kms.DecryptInput{
 		CiphertextBlob:    ciphertext,
 		EncryptionContext: map[string]*string{},
 		GrantTokens:       []*string{},
 	}
-	resp, err := svc.Decrypt(params)
+	resp, err := kmsSvc.Decrypt(params)
 
 	if err != nil {
-		return nil, err
+		log.Fatalf("kms error: %s", err.Error())
 	}
 
 	return &DataKey{
 		CiphertextBlob: ciphertext,
 		Plaintext:      resp.Plaintext, // transfer the plain text key after decryption
-	}, nil
+	}
 }
 
-// GenerateDataKey generate a key for use saving a coffer file
-func GenerateDataKey(alias string) (*DataKey, error) {
-
-	svc := kms.New(nil)
+func mustGenerateDataKey(alias string) *DataKey {
 
 	params := &kms.GenerateDataKeyInput{
 		KeyId:             aws.String(alias),
@@ -54,14 +53,14 @@ func GenerateDataKey(alias string) (*DataKey, error) {
 		NumberOfBytes:     aws.Int64(64),
 	}
 
-	resp, err := svc.GenerateDataKey(params)
+	resp, err := kmsSvc.GenerateDataKey(params)
 
 	if err != nil {
-		return nil, err
+		log.Fatalf("kms error: %s", err.Error())
 	}
 
 	return &DataKey{
 		CiphertextBlob: resp.CiphertextBlob,
 		Plaintext:      resp.Plaintext[:32], // just return 32 bytes for the key
-	}, nil
+	}
 }

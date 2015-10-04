@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/bmizerany/assert"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/kr/pretty"
 )
 
 var bundleText = []byte(`files:
@@ -32,7 +32,7 @@ func TestEncodeBundle(t *testing.T) {
 
 	data := mustEncodeBundle(bundleExpected)
 
-	spew.Printf("bundle %s\n", string(data))
+	pretty.Printf("bundle %s\n", string(data))
 
 	assert.Equal(t, string(bundleText), string(data))
 }
@@ -41,7 +41,7 @@ func TestDecodeBundle(t *testing.T) {
 
 	bundle := mustDecodeBundle(bundleText)
 
-	spew.Printf("bundle %+v\n", bundle)
+	pretty.Printf("bundle %+v\n", bundle)
 
 	bundle.MustValidate()
 

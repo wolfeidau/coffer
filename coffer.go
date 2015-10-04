@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/wolfeidau/coffer/kms"
 	"github.com/wolfeidau/coffer/nacl"
 )
 
@@ -129,11 +128,7 @@ func mustEncryptPayload(data []byte, alias string) []byte {
 		log.Fatalf("coffer file already encrypted")
 	}
 
-	key, err := kms.GenerateDataKey(alias)
-
-	if err != nil {
-		log.Fatalf("kms error: %s", err.Error())
-	}
+	key := mustGenerateDataKey(alias)
 
 	payload := nacl.Encrypt(data, key.Plaintext)
 	cipherText := base64.StdEncoding.EncodeToString(payload)
@@ -164,11 +159,7 @@ func mustDecryptPayload(data []byte, alias string) []byte {
 			log.Fatalf("unable to decode key")
 		}
 
-		key, err := kms.Decrypt(keyData)
-
-		if err != nil {
-			log.Fatalf("kms error: %s", err.Error())
-		}
+		key := mustDecrypt(keyData)
 
 		decoded, err := base64.StdEncoding.DecodeString(coffer.CipherText)
 
