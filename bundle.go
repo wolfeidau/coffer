@@ -31,7 +31,7 @@ type FileData struct {
 	Content string `yaml:"content"`
 }
 
-// FileData checks the validity of the file data structure.
+// MustValidate checks the validity of the file data structure.
 func (f *FileData) MustValidate(name string) {
 	if f.Mode == 0 {
 		log.Fatalf("Validation failed: file mode must be set for %s", name)
