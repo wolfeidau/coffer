@@ -29,10 +29,11 @@ func mustUpload(bucket string, filename string, payload []byte) {
 	log.Printf("putting file=%s into bucket=%s length=%d", filename, bucket, len(payload))
 
 	params := &s3.PutObjectInput{
-		Bucket:        aws.String(bucket),   // Required
-		Key:           aws.String(filename), // Required
-		Body:          bytes.NewReader(payload),
-		ContentLength: aws.Int64(int64(len(payload))),
+		Bucket:               aws.String(bucket),   // Required
+		Key:                  aws.String(filename), // Required
+		Body:                 bytes.NewReader(payload),
+		ContentLength:        aws.Int64(int64(len(payload))),
+		ServerSideEncryption: aws.String(s3.ServerSideEncryptionAes256),
 	}
 
 	resp, err := s3Svc.PutObject(params)
@@ -56,8 +57,9 @@ func mustDownload(bucket string, filename string) []byte {
 	log.Printf("getting file=%s from bucket=%s", filename, bucket)
 
 	params := &s3.GetObjectInput{
-		Bucket: aws.String(bucket),   // Required
-		Key:    aws.String(filename), // Required
+		Bucket:               aws.String(bucket),   // Required
+		Key:                  aws.String(filename), // Required
+		SSECustomerAlgorithm: aws.String(s3.ServerSideEncryptionAes256),
 	}
 
 	resp, err := s3Svc.GetObject(params)
