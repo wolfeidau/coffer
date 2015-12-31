@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
@@ -21,7 +22,7 @@ type ObjectStorage interface {
 var s3Svc ObjectStorage
 
 func init() {
-	s3Svc = s3.New(nil)
+	s3Svc = s3.New(session.New())
 }
 
 func mustUpload(bucket string, filename string, payload []byte) {

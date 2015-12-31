@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 )
 
@@ -16,7 +17,7 @@ type KeyManagement interface {
 var kmsSvc KeyManagement
 
 func init() {
-	kmsSvc = kms.New(nil)
+	kmsSvc = kms.New(session.New())
 }
 
 // DataKey which contains the details of the KMS key
