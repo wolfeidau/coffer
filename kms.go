@@ -28,6 +28,8 @@ type DataKey struct {
 
 func mustDecrypt(ciphertext []byte) *DataKey {
 
+	log.Printf("decrypting data using KMS")
+
 	params := &kms.DecryptInput{
 		CiphertextBlob:    ciphertext,
 		EncryptionContext: map[string]*string{},

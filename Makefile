@@ -1,6 +1,6 @@
 NAME=coffer
 ARCH=$(shell uname -m)
-VERSION=2.0.0
+VERSION=2.0.1
 
 build:
 	mkdir -p build/Linux  && GOOS=linux  go build -ldflags "-X main.Version=$(VERSION)" -o build/Linux/$(NAME) ./cmds/coffer
