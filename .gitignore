@@ -3,3 +3,6 @@ build
 release
 *.coffer
 testcoffer.yaml
+dist
+build
+vendor

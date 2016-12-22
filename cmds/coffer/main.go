@@ -4,9 +4,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/alecthomas/kingpin"
 	"github.com/wolfeidau/coffer"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+const S3BucketEnv = "S3_BUCKET"
 
 var (
 	app        = kingpin.New("coffer", "A command line tool to manage encrypted coffer files.")
@@ -25,12 +27,12 @@ var (
 	sync           = app.Command("sync", "Sync the coffer file with the local filesystem.")
 	base           = sync.Flag("base", "Set a base path for testing.").String()
 	upload         = app.Command("upload", "Upload a bundle to s3.")
-	uploadBucket   = upload.Flag("bucket", "Name of the s3 bucket").OverrideDefaultFromEnvar("S3_BUCKET").Required().String()
+	uploadBucket   = upload.Flag("bucket", "Name of the s3 bucket").String()
 	download       = app.Command("download", "Download a bundle from s3.")
-	downloadBucket = download.Flag("bucket", "Name of the s3 bucket").OverrideDefaultFromEnvar("S3_BUCKET").Required().String()
+	downloadBucket = download.Flag("bucket", "Name of the s3 bucket").String()
 
 	downloadSync       = app.Command("download-sync", "Download a bundle from s3 and sync with the local filesystem.")
-	downloadSyncBucket = downloadSync.Flag("bucket", "Name of the s3 bucket").OverrideDefaultFromEnvar("S3_BUCKET").Required().String()
+	downloadSyncBucket = downloadSync.Flag("bucket", "Name of the s3 bucket").String()
 	downloadSyncBase   = downloadSync.Flag("base", "Set a base path for testing.").String()
 
 	// Version app version updated by build script
@@ -55,12 +57,29 @@ func main() {
 		coffer.MustSync(*cofferFile, *alias, *base)
 	case upload.FullCommand():
 		log.Printf("upload")
-		coffer.MustUpload(*cofferFile, *alias, *uploadBucket)
+		s3Bucket := validateBucketName(*uploadBucket)
+		coffer.MustUpload(*cofferFile, *alias, s3Bucket)
 	case download.FullCommand():
 		log.Printf("download")
-		coffer.MustDownload(*cofferFile, *alias, *downloadBucket)
+		s3Bucket := validateBucketName(*uploadBucket)
+		coffer.MustDownload(*cofferFile, *alias, s3Bucket)
 	case downloadSync.FullCommand():
 		log.Printf("download-sync")
-		coffer.MustDownloadSync(*cofferFile, *alias, *downloadSyncBucket, *downloadSyncBase)
+		s3Bucket := validateBucketName(*uploadBucket)
+		coffer.MustDownloadSync(*cofferFile, *alias, s3Bucket, *downloadSyncBase)
 	}
+}
+
+func validateBucketName(bucket string) string {
+	if bucket != "" {
+		return bucket
+	}
+
+	s3Bucket := os.Getenv(S3BucketEnv)
+
+	if s3Bucket == "" {
+		log.Fatalf("bucket name is required")
+	}
+
+	return s3Bucket
 }
