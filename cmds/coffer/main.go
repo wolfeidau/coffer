@@ -61,11 +61,11 @@ func main() {
 		coffer.MustUpload(*cofferFile, *alias, s3Bucket)
 	case download.FullCommand():
 		log.Printf("download")
-		s3Bucket := validateBucketName(*uploadBucket)
+		s3Bucket := validateBucketName(*downloadBucket)
 		coffer.MustDownload(*cofferFile, *alias, s3Bucket)
 	case downloadSync.FullCommand():
 		log.Printf("download-sync")
-		s3Bucket := validateBucketName(*uploadBucket)
+		s3Bucket := validateBucketName(*downloadSyncBucket)
 		coffer.MustDownloadSync(*cofferFile, *alias, s3Bucket, *downloadSyncBase)
 	}
 }
@@ -78,7 +78,7 @@ func validateBucketName(bucket string) string {
 	s3Bucket := os.Getenv(S3BucketEnv)
 
 	if s3Bucket == "" {
-		log.Fatalf("bucket name is required")
+		log.Fatalf("--bucket s3 bucket name is required")
 	}
 
 	return s3Bucket

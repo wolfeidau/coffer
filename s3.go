@@ -58,9 +58,8 @@ func mustDownload(bucket string, filename string) []byte {
 	log.Printf("getting file=%s from bucket=%s", filename, bucket)
 
 	params := &s3.GetObjectInput{
-		Bucket:               aws.String(bucket),   // Required
-		Key:                  aws.String(filename), // Required
-		SSECustomerAlgorithm: aws.String(s3.ServerSideEncryptionAes256),
+		Bucket: aws.String(bucket),   // Required
+		Key:    aws.String(filename), // Required
 	}
 
 	resp, err := s3Svc.GetObject(params)
