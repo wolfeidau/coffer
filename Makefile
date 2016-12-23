@@ -1,6 +1,6 @@
 NAME=coffer
 ARCH=$(shell uname -m)
-VERSION=2.0.1
+VERSION=2.1.0
 ITERATION := 1
 
 default: deps compile
