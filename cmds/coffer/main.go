@@ -57,20 +57,20 @@ func main() {
 		coffer.MustSync(*cofferFile, *alias, *base)
 	case upload.FullCommand():
 		log.Printf("upload")
-		s3Bucket := validateBucketName(*uploadBucket)
+		s3Bucket := mustValidateBucketName(*uploadBucket)
 		coffer.MustUpload(*cofferFile, *alias, s3Bucket)
 	case download.FullCommand():
 		log.Printf("download")
-		s3Bucket := validateBucketName(*downloadBucket)
+		s3Bucket := mustValidateBucketName(*downloadBucket)
 		coffer.MustDownload(*cofferFile, *alias, s3Bucket)
 	case downloadSync.FullCommand():
 		log.Printf("download-sync")
-		s3Bucket := validateBucketName(*downloadSyncBucket)
+		s3Bucket := mustValidateBucketName(*downloadSyncBucket)
 		coffer.MustDownloadSync(*cofferFile, *alias, s3Bucket, *downloadSyncBase)
 	}
 }
 
-func validateBucketName(bucket string) string {
+func mustValidateBucketName(bucket string) string {
 	if bucket != "" {
 		return bucket
 	}
