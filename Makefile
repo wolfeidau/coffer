@@ -31,7 +31,7 @@ dist:
 	done
 
 release:
-	@github-release "v$(VERSION)" dist/* --commit "$(git rev-parse HEAD)" --github-repository versent/$(NAME)
+	@github-release "v$(VERSION)" dist/* --commit "$(git rev-parse HEAD)" --github-repository wolfeidau/$(NAME)
 
 test: deps
 	go test -cover -v $(shell glide novendor)
